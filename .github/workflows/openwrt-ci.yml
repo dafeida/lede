@@ -10,8 +10,10 @@
 name: OpenWrt-CI
 
 on:
-  schedule:
-    - cron: 0 20 * * *
+#  schedule:
+#    - cron: 0 20 * * *
+  watch:
+    types: [started]
 
 jobs:
 
@@ -46,15 +48,23 @@ jobs:
           # ln -s /mnt/openwrt/feeds ./feeds
           # ln -s /mnt/openwrt/staging_dir ./staging_dir
 
-          df -h
 
       - name: Update feeds
         run: |
           ./scripts/feeds update -a
+          
+      - name: Install feeds
+        run: |
           ./scripts/feeds install -a
 
       - name: Generate configuration file
-        run: make defconfig
+        run: |
+        [ -e files ] && mv files lede/files
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE lede/.config
+        chmod +x $DIY_SH
+        cd lede
+        ../$DIY_SH
+        make defconfig
 
       - name: Make download
         run: |
